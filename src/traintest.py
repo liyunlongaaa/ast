@@ -5,6 +5,7 @@
 # @Email   : yuangong@mit.edu
 # @File    : traintest.py
 
+from ast import arg
 import sys
 import os
 import datetime
@@ -72,16 +73,35 @@ def train(audio_model, train_loader, test_loader, args):
         warmup = False
     elif args.dataset == 'speechcommands':
         print('scheduler for speech commands is used')
+
+        # #resume training 
+        # if os.path.exists("%s/models" % (exp_dir)):
+        #     audio_model.load_state_dict(torch.load("%s/models/best_audio_model.pth" % (exp_dir), map_location='cpu'))
+        #     audio_model = audio_model.to(device)
+        #     optimizer.load_state_dict(torch.load("%s/models/best_optim_state.pth" % (exp_dir), map_location='cpu'))
+        #     epoch = 30  #手动看
+        #scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, list(range(5,26)), gamma=0.85, last_epoch=epoch)
+        #     print("---------------resume training-----------------------")
+
         scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, list(range(5,26)), gamma=0.85)
         main_metrics = 'acc'
-        loss_fn = nn.BCEWithLogitsLoss()
+        loss_fn = nn.BCEWithLogitsLoss()  #这个函数可用于一个对象同时有多标签的情况
         warmup = False
+    elif args.dataset == 'AVWWS':
+        print('scheduler for AVWWS is used')
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, list(range(5,26)), gamma=0.85)
+        main_metrics = 'acc'
+        loss_fn = nn.CrossEntropyLoss()
+        warmup = False        
+        
     else:
         raise ValueError('unknown dataset, dataset should be in [audioset, speechcommands, esc50]')
     print('now training with {:s}, main metrics: {:s}, loss function: {:s}, learning rate scheduler: {:s}'.format(str(args.dataset), str(main_metrics), str(loss_fn), str(scheduler)))
     args.loss_fn = loss_fn
 
     epoch += 1
+
+
     # for amp
     scaler = GradScaler()
 
@@ -103,8 +123,8 @@ def train(audio_model, train_loader, test_loader, args):
             audio_input = audio_input.to(device, non_blocking=True)
             labels = labels.to(device, non_blocking=True)
 
-            data_time.update(time.time() - end_time)
-            per_sample_data_time.update((time.time() - end_time) / audio_input.shape[0])
+            data_time.update(time.time() - end_time)  
+            per_sample_data_time.update((time.time() - end_time) / audio_input.shape[0])  #取每个样本的时间
             dnn_start_time = time.time()
 
             # first several steps for warm-up
@@ -133,15 +153,14 @@ def train(audio_model, train_loader, test_loader, args):
             scaler.update()
 
             # record loss
-            loss_meter.update(loss.item(), B)
-            batch_time.update(time.time() - end_time)
-            per_sample_time.update((time.time() - end_time)/audio_input.shape[0])
-            per_sample_dnn_time.update((time.time() - dnn_start_time)/audio_input.shape[0])
+            loss_meter.update(loss.item(), B)     #每个样本的loss均值
+            batch_time.update(time.time() - end_time) #没有打印...统计这个每个batch所需时间，每次n+1,内部会除
+            per_sample_time.update((time.time() - end_time)/audio_input.shape[0])  #每个样本的总处理的时间
+            per_sample_dnn_time.update((time.time() - dnn_start_time)/audio_input.shape[0])  #DNN处理每个样本所需时间
 
             print_step = global_step % args.n_print_steps == 0
-            early_print_step = epoch == 0 and global_step % (args.n_print_steps/10) == 0
-            print_step = print_step or early_print_step
 
+            #理想情况 per_sample_data_time + per_sample_dnn_time = per_sample_time
             if print_step and global_step != 0:
                 print('Epoch: [{0}][{1}/{2}]\t'
                   'Per Sample Total Time {per_sample_time.avg:.5f}\t'
@@ -160,17 +179,18 @@ def train(audio_model, train_loader, test_loader, args):
         print('start validation')
         stats, valid_loss = validate(audio_model, test_loader, args, epoch)
 
-        # ensemble results
+        # ensemble results， 和之前模型结果做ensemble
         cum_stats = validate_ensemble(args, epoch)
         cum_mAP = np.mean([stat['AP'] for stat in cum_stats])
         cum_mAUC = np.mean([stat['auc'] for stat in cum_stats])
-        cum_acc = cum_stats[0]['acc']
+        cum_acc = cum_stats[0]['acc']       #只取第一类的acc???
 
         mAP = np.mean([stat['AP'] for stat in stats])
         mAUC = np.mean([stat['auc'] for stat in stats])
-        acc = stats[0]['acc']
+        acc = stats[0]['acc']               #只取第一类的acc???
 
-        middle_ps = [stat['precisions'][int(len(stat['precisions'])/2)] for stat in stats]
+        #选中间的PR点，因为每个PR曲线上的点都对应有一个阈值判断是否属于正类
+        middle_ps = [stat['precisions'][int(len(stat['precisions'])/2)] for stat in stats] 
         middle_rs = [stat['recalls'][int(len(stat['recalls'])/2)] for stat in stats]
         average_precision = np.mean(middle_ps)
         average_recall = np.mean(middle_rs)
@@ -182,7 +202,7 @@ def train(audio_model, train_loader, test_loader, args):
         print("AUC: {:.6f}".format(mAUC))
         print("Avg Precision: {:.6f}".format(average_precision))
         print("Avg Recall: {:.6f}".format(average_recall))
-        print("d_prime: {:.6f}".format(d_prime(mAUC)))
+        print("d_prime: {:.6f}".format(d_prime(mAUC)))  #一种评价指标，d’值等于两个分布均数的标准分数之差
         print("train_loss: {:.6f}".format(loss_meter.avg))
         print("valid_loss: {:.6f}".format(valid_loss))
 
@@ -215,7 +235,7 @@ def train(audio_model, train_loader, test_loader, args):
         if len(train_loader.dataset) > 2e5:
             torch.save(optimizer.state_dict(), "%s/models/optim_state.%d.pth" % (exp_dir, epoch))
 
-        scheduler.step()
+        scheduler.step()  #更新学习率
 
         print('Epoch-{0} lr: {1}'.format(epoch, optimizer.param_groups[0]['lr']))
 
@@ -281,7 +301,7 @@ def validate(audio_model, val_loader, args, epoch):
             predictions = audio_output.to('cpu').detach()
 
             A_predictions.append(predictions)
-            A_targets.append(labels)
+            A_targets.append(labels)    #labels不是一个标签，而是（B，num_classes）,num_classes可以有多个1（多标签任务），其它都是0，所以一个标签是一串向量
 
             # compute the loss
             labels = labels.to(device)
@@ -310,7 +330,7 @@ def validate(audio_model, val_loader, args, epoch):
 
 def validate_ensemble(args, epoch):
     exp_dir = args.exp_dir
-    target = np.loadtxt(exp_dir+'/predictions/target.csv', delimiter=',')
+    target = np.loadtxt(exp_dir+'/predictions/target.csv', delimiter=',')   #上一步validate存有结果
     if epoch == 1:
         cum_predictions = np.loadtxt(exp_dir + '/predictions/predictions_1.csv', delimiter=',')
     else:

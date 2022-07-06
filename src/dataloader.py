@@ -28,6 +28,7 @@ def make_index_dict(label_csv):
             line_count += 1
     return index_lookup
 
+
 def make_name_dict(label_csv):
     name_lookup = {}
     with open(label_csv, 'r') as f:
@@ -96,7 +97,7 @@ class AudiosetDataset(Dataset):
         print('number of classes is {:d}'.format(self.label_num))
 
     def _wav2fbank(self, filename, filename2=None):
-        # mixup
+        # no mixup
         if filename2 == None:
             waveform, sr = torchaudio.load(filename)
             waveform = waveform - waveform.mean()
@@ -154,11 +155,12 @@ class AudiosetDataset(Dataset):
         nframes is an integer
         """
         # do mix-up for this sample (controlled by the given mixup rate)
-        if random.random() < self.mixup:
+        if random.random() < self.mixup:  #有self.mixup的audio做mixup
             datum = self.data[index]
             # find another sample to mix, also do balance sampling
             # sample the other sample from the multinomial distribution, will make the performance worse
             # mix_sample_idx = np.random.choice(len(self.data), p=self.sample_weight_file)
+            
             # sample the other sample from the uniform distribution
             mix_sample_idx = random.randint(0, len(self.data)-1)
             mix_datum = self.data[mix_sample_idx]
@@ -178,7 +180,7 @@ class AudiosetDataset(Dataset):
             datum = self.data[index]
             label_indices = np.zeros(self.label_num)
             fbank, mix_lambda = self._wav2fbank(datum['wav'])
-            for label_str in datum['labels'].split(','):
+            for label_str in datum['labels'].split(','): #可能存在多分类数据集
                 label_indices[int(self.index_dict[label_str])] = 1.0
 
             label_indices = torch.FloatTensor(label_indices)
