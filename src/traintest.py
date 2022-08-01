@@ -49,7 +49,7 @@ def train(audio_model, train_loader, test_loader, args):
     audio_model = audio_model.to(device)
     # Set up the optimizer
     trainables = [p for p in audio_model.parameters() if p.requires_grad]
-    print('Total parameter number is : {:.3f} million'.format(sum(p.numel() for p in audio_model.parameters()) / 1e6))
+    print('Total parameter number is : {:.3f} million'.format(sum(p.numel() for p in audio_model.parameters()) / 1e6)) #获取模型参数两
     print('Total trainable parameter number is : {:.3f} million'.format(sum(p.numel() for p in trainables) / 1e6))
     optimizer = torch.optim.Adam(trainables, args.lr, weight_decay=5e-7, betas=(0.95, 0.999))
 
@@ -67,7 +67,7 @@ def train(audio_model, train_loader, test_loader, args):
         warmup = True
     elif args.dataset == 'esc50':
         print('scheduler for esc-50 is used')
-        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, list(range(5,26)), gamma=0.85)
+        scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, list(range(5,26)), gamma=0.85)  # 在第5,26个epoch学习率分别承gamma
         main_metrics = 'acc'
         loss_fn = nn.CrossEntropyLoss()
         warmup = False
@@ -183,11 +183,11 @@ def train(audio_model, train_loader, test_loader, args):
         cum_stats = validate_ensemble(args, epoch)
         cum_mAP = np.mean([stat['AP'] for stat in cum_stats])
         cum_mAUC = np.mean([stat['auc'] for stat in cum_stats])
-        cum_acc = cum_stats[0]['acc']       #只取第一类的acc???
+        cum_acc = cum_stats[0]['acc']       #只取第一类的acc??? 都一样
 
-        mAP = np.mean([stat['AP'] for stat in stats])
+        mAP = np.mean([stat['AP'] for stat in stats])   # MAP : https://blog.csdn.net/tigerda/article/details/78651159
         mAUC = np.mean([stat['auc'] for stat in stats])
-        acc = stats[0]['acc']               #只取第一类的acc???
+        acc = stats[0]['acc']               #只取第一类的acc???  都一样
 
         #选中间的PR点，因为每个PR曲线上的点都对应有一个阈值判断是否属于正类
         middle_ps = [stat['precisions'][int(len(stat['precisions'])/2)] for stat in stats] 
@@ -255,12 +255,12 @@ def train(audio_model, train_loader, test_loader, args):
         loss_meter.reset()
         per_sample_dnn_time.reset()
 
-    if args.dataset == 'audioset':
+    if args.dataset == 'audioset':  # train完后， audioset在测试集上测
         if len(train_loader.dataset) > 2e5:
             stats=validate_wa(audio_model, test_loader, args, 1, 5)
         else:
             stats=validate_wa(audio_model, test_loader, args, 6, 25)
-        mAP = np.mean([stat['AP'] for stat in stats])
+        mAP = np.mean([stat['AP'] for stat in stats])               #mAP计算
         mAUC = np.mean([stat['auc'] for stat in stats])
         middle_ps = [stat['precisions'][int(len(stat['precisions'])/2)] for stat in stats]
         middle_rs = [stat['recalls'][int(len(stat['recalls'])/2)] for stat in stats]
@@ -340,7 +340,7 @@ def validate_ensemble(args, epoch):
         # remove the prediction file to save storage space
         os.remove(exp_dir+'/predictions/predictions_' + str(epoch-1) + '.csv')
 
-    cum_predictions = cum_predictions / epoch
+    cum_predictions = cum_predictions / epoch    #和之前的所有作ensemble，好像没必要
     np.savetxt(exp_dir+'/predictions/cum_predictions.csv', cum_predictions, delimiter=',')
 
     stats = calculate_stats(cum_predictions, target)

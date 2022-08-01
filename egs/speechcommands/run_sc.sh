@@ -11,7 +11,7 @@
 
 set -x
 # comment this line if not running on sls cluster
-. /data/sls/scratch/share-201907/slstoolchainrc
+#. /data/sls/scratch/share-201907/slstoolchainrc
 source ../../venvast/bin/activate
 export TORCH_HOME=../../pretrained_models
 
@@ -22,10 +22,10 @@ audiosetpretrain=False
 bal=none
 lr=2.5e-4
 epoch=30
-freqm=48
+freqm=48   #frequency mask max length
 timem=48
 mixup=0.6
-batch_size=128
+batch_size=16
 fstride=10
 tstride=10
 tr_data=./data/datafiles/speechcommand_train_data.json

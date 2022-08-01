@@ -24,6 +24,7 @@ os.environ['CUDA_LAUNCH_BLOCKING'] = '1'
 
 print("I am process %s, running on %s: starting (%s)" % (os.getpid(), os.uname()[1], time.asctime()))  #print输出重定向到log.txt上，通过终端运行python xxx.py > $exp_dir/log.txt就可实现
 
+#ArgumentDefaultsHelpFormatter 自动添加默认的值的信息到每一个帮助信息的参数中:
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument("--data-train", type=str, default='', help="training data json")
 parser.add_argument("--data-val", type=str, default='', help="validation data json")
@@ -66,8 +67,7 @@ if args.model == 'ast':
     # if add noise for data augmentation, only use for speech commands
     noise = {'audioset': False, 'esc50': False, 'speechcommands':True, 'AVWWS':True}
 
-    audio_conf = {'num_mel_bins': 128, 'target_length': target_length[args.dataset], 'freqm': args.freqm, 'timem': args.timem, 'mixup': args.mixup, 'dataset': args.dataset, 'mode':'train', 'mean':norm_stats[args.dataset][0], 'std':norm_stats[args.dataset][1],
-                  'noise':noise[args.dataset]}
+    audio_conf = {'num_mel_bins': 128, 'target_length': target_length[args.dataset], 'freqm': args.freqm, 'timem': args.timem, 'mixup': args.mixup, 'dataset': args.dataset, 'mode':'train', 'mean':norm_stats[args.dataset][0], 'std':norm_stats[args.dataset][1], 'noise':noise[args.dataset]}
     val_audio_conf = {'num_mel_bins': 128, 'target_length': target_length[args.dataset], 'freqm': 0, 'timem': 0, 'mixup': 0, 'dataset': args.dataset, 'mode':'evaluation', 'mean':norm_stats[args.dataset][0], 'std':norm_stats[args.dataset][1], 'noise':False}
 
     if args.bal == 'bal':

@@ -37,20 +37,20 @@ def get_immediate_files(a_dir):
 
 # downlooad esc50
 # dataset provided in https://github.com/karolpiczak/ESC-50
-if os.path.exists('./data/ESC-50-master') == False:
-    esc50_url = 'https://github.com/karoldvl/ESC-50/archive/master.zip'
-    wget.download(esc50_url, out='./data/')
-    with zipfile.ZipFile('./data/ESC-50-master.zip', 'r') as zip_ref:
-        zip_ref.extractall('./data/')
-    os.remove('./data/ESC-50-master.zip')
+# if os.path.exists('./data/ESC-50-master') == False:
+#     esc50_url = 'https://github.com/karoldvl/ESC-50/archive/master.zip'
+#     wget.download(esc50_url, out='./data/')
+#     with zipfile.ZipFile('./data/ESC-50-master.zip', 'r') as zip_ref:
+#         zip_ref.extractall('./data/')
+#     os.remove('./data/ESC-50-master.zip')
 
-    # convert the audio to 16kHz
-    base_dir = './data/ESC-50-master/'
-    os.mkdir('./data/ESC-50-master/audio_16k/')
-    audio_list = get_immediate_files('./data/ESC-50-master/audio')
-    for audio in audio_list:
-        print('sox ' + base_dir + '/audio/' + audio + ' -r 16000 ' + base_dir + '/audio_16k/' + audio)
-        os.system('sox ' + base_dir + '/audio/' + audio + ' -r 16000 ' + base_dir + '/audio_16k/' + audio)
+#     # convert the audio to 16kHz
+#     base_dir = './data/ESC-50-master/'
+#     os.mkdir('./data/ESC-50-master/audio_16k/')
+#     audio_list = get_immediate_files('./data/ESC-50-master/audio')
+#     for audio in audio_list:
+#         print('sox ' + base_dir + '/audio/' + audio + ' -r 16000 ' + base_dir + '/audio_16k/' + audio)
+#         os.system('sox ' + base_dir + '/audio/' + audio + ' -r 16000 ' + base_dir + '/audio_16k/' + audio)
 
 label_set = np.loadtxt('./data/esc_class_labels_indices.csv', delimiter=',', dtype='str')
 label_map = {}
@@ -68,12 +68,12 @@ for fold in [1,2,3,4,5]:
     train_wav_list = []
     eval_wav_list = []
     for i in range(0, len(meta)):
-        cur_label = label_map[meta[i][3]]
+        cur_label = label_map[meta[i][3]]  # 英文label
         cur_path = meta[i][0]
         cur_fold = int(meta[i][1])
         # /m/07rwj is just a dummy prefix
         cur_dict = {"wav": base_path + cur_path, "labels": '/m/07rwj'+cur_label.zfill(2)}
-        if cur_fold == fold:
+        if cur_fold == fold:   #交叉验证，只有是当前fold的数据当作验证集，其余都是训练集
             eval_wav_list.append(cur_dict)
         else:
             train_wav_list.append(cur_dict)

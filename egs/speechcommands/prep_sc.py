@@ -31,7 +31,7 @@ if os.path.exists('./data/speech_commands_v0.02/train_list.txt')==False:
     with open('./data/speech_commands_v0.02/testing_list.txt', 'r') as f:
         test_list = f.readlines()
 
-    val_test_list = list(set(test_list+val_list))
+    val_test_list = list(set(test_list + val_list))
 
     def get_immediate_subdirectories(a_dir):
         return [name for name in os.listdir(a_dir) if os.path.isdir(os.path.join(a_dir, name))]
@@ -43,7 +43,7 @@ if os.path.exists('./data/speech_commands_v0.02/train_list.txt')==False:
     all_list = []
     for cmd in all_cmds:
         if cmd != '_background_noise_':
-            cmd_samples = get_immediate_files(base_path+'/'+cmd)
+            cmd_samples = get_immediate_files(base_path + '/' + cmd)
             for sample in cmd_samples:
                 all_list.append(cmd + '/' + sample+'\n')
 
@@ -98,12 +98,12 @@ if os.path.exists('./data/datafiles') == False:
     base_path = './data/speech_commands_v0.02/'
     for split in ['testing', 'validation', 'train']:
         wav_list = []
-        with open(base_path+split+'_list.txt', 'r') as f:
+        with open(base_path + split + '_list.txt', 'r') as f:
             filelist = f.readlines()
         for file in filelist:
             cur_label = label_map[file.split('/')[0]]
             cur_path = os.path.abspath(os.getcwd()) + '/data/speech_commands_v0.02/' + file.strip()
-            cur_dict = {"wav": cur_path, "labels": '/m/spcmd'+cur_label.zfill(2)}
+            cur_dict = {"wav": cur_path, "labels": '/m/spcmd' + cur_label.zfill(2)}
             wav_list.append(cur_dict)
         if split == 'train':
             with open('./data/datafiles/speechcommand_train_data.json', 'w') as f:

@@ -10,7 +10,7 @@
 
 set -x
 # comment this line if not running on sls cluster
-. /data/sls/scratch/share-201907/slstoolchainrc
+#. /data/sls/scratch/share-201907/slstoolchainrc
 source ../../venvast/bin/activate
 export TORCH_HOME=../../pretrained_models
 
@@ -29,7 +29,7 @@ freqm=24
 timem=96
 mixup=0
 epoch=25
-batch_size=48
+batch_size=4
 fstride=10
 tstride=10
 base_exp_dir=./exp/test-${dataset}-f$fstride-t$tstride-imp$imagenetpretrain-asp$audiosetpretrain-b$batch_size-lr${lr}
@@ -56,7 +56,7 @@ do
   --label-csv ./data/esc_class_labels_indices.csv --n_class 50 \
   --lr $lr --n-epochs ${epoch} --batch-size $batch_size --save_model False \
   --freqm $freqm --timem $timem --mixup ${mixup} --bal ${bal} \
-  --tstride $tstride --fstride $fstride --imagenet_pretrain $imagenetpretrain --audioset_pretrain $audiosetpretrain
+  --tstride $tstride --fstride $fstride --imagenet_pretrain $imagenetpretrain --audioset_pretrain $audiosetpretrain > $exp_dir/log.txt
 done
 
-python ./get_esc_result.py --exp_path ${base_exp_dir}
+python ./get_esc_result.py --exp_path ${base_exp_dir} > $exp_dir/log_result.txt

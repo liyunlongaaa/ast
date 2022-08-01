@@ -8,6 +8,9 @@
 import os
 import torch
 from models import ASTModel
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 # download pretrained model in this directory
 os.environ['TORCH_HOME'] = '../pretrained_models'
 # assume each input spectrogram has 100 time frames
@@ -16,8 +19,10 @@ input_tdim = 100
 label_dim = 527
 # create a pseudo input: a batch of 10 spectrogram, each with 100 time frames and 128 frequency bins
 test_input = torch.rand([10, input_tdim, 128])
+test_input = test_input.to(device)
 # create an AST model
 ast_mdl = ASTModel(label_dim=label_dim, input_tdim=input_tdim, imagenet_pretrain=True, audioset_pretrain=True)
+ast_mdl = ast_mdl.to(device)
 test_output = ast_mdl(test_input)
 # output should be in shape [10, 527], i.e., 10 samples, each with prediction of 527 classes.
 print(test_output.shape)

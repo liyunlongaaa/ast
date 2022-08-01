@@ -26,14 +26,14 @@ then
   bal=none
   lr=5e-5
   epoch=25
-  tr_data=/data/sls/scratch/yuangong/aed-pc/src/enhance_label/datafiles_local/balanced_train_data_type1_2_mean.json
+  tr_data=/data/sls/scratch/yuangong/aed-pc/src/enhance_label/datafiles_local/balanced_train_data_type1_2_mean.json #要改
 else
   bal=bal
   lr=1e-5
   epoch=5
-  tr_data=/data/sls/scratch/yuangong/aed-pc/src/enhance_label/datafiles_local/whole_train_data.json
-fi
-te_data=/data/sls/scratch/yuangong/audioset/datafiles/eval_data.json
+  tr_data=/data/sls/scratch/yuangong/aed-pc/src/enhance_label/datafiles_local/whole_train_data.json  #要改
+fi 
+te_data=/data/sls/scratch/yuangong/audioset/datafiles/eval_data.json  #要改
 freqm=48
 timem=192
 mixup=0.5

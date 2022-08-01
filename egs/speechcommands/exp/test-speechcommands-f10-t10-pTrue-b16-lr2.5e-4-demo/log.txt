@@ -1,0 +1,22 @@
+I am process 268582, running on yoos-X17-AT-22: starting (Mon Jul  4 08:39:19 2022)
+now train a audio spectrogram transformer model
+balanced sampler is not used
+---------------the train dataloader---------------
+now using following mask: 48 freq, 48 time
+now using mix-up with rate 0.600000
+now process speechcommands
+use dataset mean -6.846 and std 5.565 to normalize the input.
+now use noise augmentation
+number of classes is 35
+---------------the evaluation dataloader---------------
+now using following mask: 0 freq, 0 time
+now using mix-up with rate 0.000000
+now process speechcommands
+use dataset mean -6.846 and std 5.565 to normalize the input.
+number of classes is 35
+---------------AST Model Summary---------------
+ImageNet pretraining: True, AudioSet pretraining: False
+frequncey stride=10, time stride=10
+number of patches=144
+
+Creating experiment directory: ./exp/test-speechcommands-f10-t10-pTrue-b16-lr2.5e-4-demo
